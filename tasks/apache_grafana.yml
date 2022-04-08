@@ -1,0 +1,20 @@
+---
+- name: Removing apache default file
+  file:
+    path: /etc/apache2/sites-enabled/000-default.conf
+    state: absent
+
+- name: Copy Grafana-Apache file
+  template:
+    src: etc/apache2/sites-available/grafana.conf.j2
+    dest: /etc/apache2/sites-available/grafana.conf
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+
+- name: Enable grafana as main host
+  file:
+    src: /etc/apache2/sites-available/grafana.conf
+    dest: /etc/apache2/sites-enabled/grafana.conf
+    state: link

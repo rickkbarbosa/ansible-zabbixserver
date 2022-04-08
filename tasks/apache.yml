@@ -1,0 +1,55 @@
+---
+- name: Include specific variables.
+  include_vars: apache.yml
+
+- name: Zabbix main tasks
+  include: apache_zabbix.yml
+  when: zabbix_web_main|bool == true
+
+- name: Preparing Apache to work with Zabbix
+  file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+  with_items: 
+    - { src: "/etc/zabbix/apache.conf", dest: "/etc/apache2/conf-available/zabbix.conf" }
+    - { src: "/etc/apache2/conf-available/zabbix.conf", dest: "/etc/apache2/conf-enabled/zabbix.conf" }
+  when: not zabbix_web_main
+
+- name: Grafana main tasks
+  include: apache_grafana.yml
+  when: grafana_web_main|bool == true
+
+- name: Where is PHP conf?
+  shell: php -i | grep 'php.ini' | grep ^"Configuration File" | awk '{print $6}'
+  register: phpconf_location
+
+- lineinfile:
+    dest: "{{ phpconf_location.stdout }}/php.ini"
+    regexp: "{{ item.src }}"
+    line: "{{ item.dest }}"
+    backup: yes
+  with_items:
+    - { src: '^[#;]?post_max_size', dest: 'post_max_size = {{zabbix_php_config.post_max_size}}' }
+    - { src: '^[#;]?max_execution_time', dest: 'max_execution_time = {{zabbix_php_config.max_execution_time}}' }
+    - { src: '^[#;]?max_input_time', dest: 'max_input_time = {{zabbix_php_config.max_execution_time}}' }
+    - { src: '^[#;]?date.timezone', dest: 'date.timezone = "{{zabbix_php_config.timezone}}"' }
+    - { src: '^[#;]?memory_limit', dest: 'memory_limit = {{zabbix_php_config.memory_limit}}' }
+
+- lineinfile:
+    dest: "{{ phpconf_location.stdout }}/../apache2/php.ini"
+    regexp: '^[#;]?date.timezone'
+    line: 'date.timezone = "America/Sao_Paulo"'
+    backup: yes
+  ignore_errors: true
+
+- shell: phpenmod "{{ item }}"
+  with_items: "{{ zabbix_php_modules }}"
+
+- shell: a2enmod "{{ item }}"
+  with_items: "{{ grafana_mods_enabled }}"
+
+- name: Restart apache
+  service: 
+    name: "{{ apache_service }}"
+    state: restarted

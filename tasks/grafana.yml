@@ -1,0 +1,20 @@
+- name: monitoring packages grafana
+  package:
+    pkg: grafana
+    state: latest
+    force: yes
+
+- name: Copying Grafana ConfigFiles
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    mode: 0644
+  with_items:
+    - { src: 'etc/grafana/grafana.j2', dest: '/etc/grafana/grafana.ini' }
+
+- name: Installing Grafana Plugins
+  command: grafana-cli plugins install "{{ item }}"
+  with_items:
+    - "{{ grafana_plugins }}"
+  notify: Restart grafana

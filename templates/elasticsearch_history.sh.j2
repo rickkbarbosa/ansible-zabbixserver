@@ -1,0 +1,163 @@
+#!/bin/bash
+
+{% set zabbix_estypes = zabbix_elasticsearch.storagetype.split(',') %}
+{% for zabbix_estype in zabbix_estypes %}
+
+#Char indexes
+{% if zabbix_estype in('str','log','text') %}
+#Mappings and Templates
+curl -X PUT \
+ {{ zabbix_elasticsearch.url }}/{{ zabbix_estype }} \
+ -H 'content-type:application/json' \
+ -d '{
+   "settings" : {
+      "index" : {
+         "number_of_replicas" : {{ zabbix_elasticsearch.replicas }},
+         "number_of_shards" : {{ zabbix_elasticsearch.shards|default('1') }}
+      }
+   },
+   "mappings" : {
+      "values" : {
+         "properties" : {
+            "itemid" : {
+               "type" : "long"
+            },
+            "clock" : {
+               "format" : "epoch_second",
+               "type" : "date"
+            },
+            "value" : {
+               "fields" : {
+                  "analyzed" : {
+                     "index" : true,
+                     "type" : "text",
+                     "analyzer" : "standard"
+                  }
+               },
+               "index" : false,
+               "type" : "text"
+            }
+         }
+      }
+   }
+}'
+
+curl -X PUT \
+ {{ zabbix_elasticsearch.url }}/_template/{{ zabbix_estype }}_template \
+ -H 'content-type:application/json' \
+ -d '{
+   "template": "{{ zabbix_estype }}*",
+   "index_patterns": ["{{ zabbix_estype }}*"],
+   "settings" : {
+      "index" : {
+         "number_of_replicas" : {{ zabbix_elasticsearch.replicas }},
+         "number_of_shards" : {{ zabbix_elasticsearch.shards|default('1') }}
+      }
+   },
+   "mappings" : {
+      "values" : {
+         "properties" : {
+            "itemid" : {
+               "type" : "text"
+            },
+            "clock" : {
+               "format" : "epoch_second",
+               "type" : "date"
+            },
+            "value" : {
+               "type" : "text"
+            }
+         }
+      }
+   }
+}'
+
+{% else %}
+
+curl -X PUT \
+ {{ zabbix_elasticsearch.url }}/{{ zabbix_estype }} \
+ -H 'content-type:application/json' \
+ -d '{
+   "settings" : {
+      "index" : {
+         "number_of_replicas" : {{ zabbix_elasticsearch.replicas }},
+         "number_of_shards" : {{ zabbix_elasticsearch.shards|default('1') }}
+      }
+   },
+   "mappings" : {
+      "values" : {
+         "properties" : {
+            "itemid" : {
+               "type" : "integer"
+            },
+            "clock" : {
+               "format" : "epoch_second",
+               "type" : "date"
+            },
+            "value" : {
+               "fields" : {
+                  "analyzed" : {
+                     "index" : true,
+                     "type" : "{% if zabbix_estype == 'uint'  %}integer{% else %}long{% endif %}"
+                  }
+               },
+               "index" : false,
+               "type" : "integer"
+            }
+         }
+      }
+   }
+}'
+
+curl -X PUT \
+ {{ zabbix_elasticsearch.url }}/_template/{{ zabbix_estype }}_template \
+ -H 'content-type:application/json' \
+ -d '{
+   "template": "{{ zabbix_estype }}*",
+   "index_patterns": ["{{ zabbix_estype }}*"],
+   "settings" : {
+      "index" : {
+         "number_of_replicas" : {{ zabbix_elasticsearch.replicas }},
+         "number_of_shards" : {{ zabbix_elasticsearch.shards|default('1') }}
+      }
+   },
+   "mappings" : {
+      "values" : {
+         "properties" : {
+            "itemid" : {
+               "type" : "long"
+            },
+            "clock" : {
+               "format" : "epoch_second",
+               "type" : "date"
+            },
+            "value" : {
+               "type" : "long"
+            }
+         }
+      }
+   }
+}'
+{% endif %}
+
+#Pipelines
+curl -X PUT \
+ {{ zabbix_elasticsearch.url }}/_ingest/pipeline/{{ zabbix_estype }}-pipeline \
+ -H 'content-type:application/json' \
+ -d '{
+  "description": "daily {{ zabbix_estype }} index naming",
+  "processors": [
+    {
+      "date_index_name": {
+        "field": "clock",
+        "date_formats": ["UNIX"],
+        "index_name_prefix": "{{ zabbix_estype }}-",
+        "date_rounding": "d"
+      }
+    }
+  ]
+}'
+
+{% endfor %}
+
+curl -XPUT -H 'Content-Type: application/json' '{{ zabbix_elasticsearch.url }}/*/_settings' -d '{ "number_of_replicas" : {{ zabbix_elasticsearch.replicas }} } }'

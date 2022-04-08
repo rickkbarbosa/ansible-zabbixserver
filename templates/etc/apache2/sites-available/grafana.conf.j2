@@ -1,0 +1,21 @@
+<VirtualHost *:80>
+	
+	ServerName zabbix
+	DocumentRoot /usr/share/zabbix
+
+	ErrorLog ${APACHE_LOG_DIR}/error.log
+	CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    ProxyPreserveHost On
+        <Proxy *>
+            Order allow,deny
+            Allow from all
+        </Proxy>
+
+        ProxyRequests off    
+        ProxyPass / http://127.0.0.1:{{ grafana_port }}/
+        ProxyPassReverse / http://127.0.0.1:{{ grafana_port }}/        
+        RewriteEngine On
+        ExpiresActive On
+        FileEtag None
+</VirtualHost>

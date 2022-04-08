@@ -1,0 +1,72 @@
+---
+zabbix_server_port: 10051
+zabbix_version_source: 5.0
+zabbix_version_source_build: 1
+
+zabbix_logdir: /var/log/zabbix/zabbix_server.log
+
+monitoring_packages:
+  - zabbix-sender
+  - zabbix-get
+  - zabbix-server-mysql
+  - zabbix-frontend-php
+  - zabbix-agent
+  - libwww-perl
+  - libjson-xs-perl
+  - libgnutls30
+  - libcurl3-gnutls
+  - libgnutls-openssl27
+  - snmp
+  - nmap 
+  - snmp-mibs-downloader
+  - python-boto
+  - awscli
+  - libfontconfig
+  - unzip
+  - zip
+
+monitoring_graphic_packages:
+  - apache2
+  - libfontconfig1
+  - php-bcmath
+  - php-bcmath
+  - php-gd
+  - php-json
+  - php-ldap
+  - php-mbstring
+  - php-mbstring
+  - php-ssh2
+  - php-xml
+  - php-xmlreader
+  - php-xmlwriter
+  - libapache2-mod-php
+
+monitoring_services: 
+  - zabbix-server
+
+grafana_service: grafana-server
+
+apache_service: apache2
+
+grafana_plugins:
+  - sileht-gnocchi-datasource
+  - alexanderzobnin-zabbix-app
+  - grafana-piechart-panel
+  - grafana-worldmap-panel
+  - grafana-polystat-panel
+  - michaeldmoore-multistat-panel
+  - grafana-piechart-panel
+  
+grafana_port: 3000
+
+zabbix_php_modules:
+  - bcmath
+  - mbstring
+  - xmlwriter
+  - xmlreader
+
+zabbix_user: zabbix
+
+opsgenie_deb_url: "https://og-release-cicd-public-oregon.s3-us-west-2.amazonaws.com/purpose=public/project=oec-scripts/env=prod/branch=master/module=oec-scripts/version=1.1.0/opsgenie-zabbix-1.1.0-deb-amd64.deb"
+
+zabbix_source_origin: "https://ufpr.dl.sourceforge.net/project/zabbix/ZABBIX%20Latest%20Stable/"

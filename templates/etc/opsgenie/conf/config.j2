@@ -1,0 +1,31 @@
+{
+  "apiKey": "{{ opsgenie_api }}",
+  "baseUrl": "https://api.opsgenie.com",
+  "logLevel": "DEBUG",
+  "globalArgs": [],
+  "globalFlags": {
+    "command_url": "http://localhost/zabbix/api_jsonrpc.php",
+    "user": "{{ zabbix_api_user }}",
+    "password": "{{ zabbix_api_pass }}"
+  },
+  "actionMappings": {
+    "Acknowledge": {
+      "filepath": "/home/opsgenie/oec/scripts/actionExecutor.py",
+      "sourceType": "local",
+      "environmentVariables": [],
+      "stdout": "/home/opsgenie/oec/output/output.txt"
+    }
+  },
+  "pollerConf": {
+    "pollingWaitIntervalInMillis": 100,
+    "visibilityTimeoutInSec": 30,
+    "maxNumberOfMessages": 10
+  },
+  "poolConf": {
+    "maxNumberOfWorker": 12,
+    "minNumberOfWorker": 4,
+    "monitoringPeriodInMillis": 15000,
+    "keepAliveTimeInMillis": 6000,
+    "queueSize": 0
+  }
+}

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+COMPRESSEDFILE="/opt/zabbix-notify.tar.gz"
+ZBX_NOTIFYDIR="/opt/"
+ZBX_INSTALLDIR="/usr/lib/zabbix/alertscripts"
+
+tar -xzf ${COMPRESSEDFILE} -C ${ZBX_NOTIFYDIR}
+cd ${ZBX_NOTIFYDIR}/zabbix-notify
+
+perl Makefile.PL INSTALLSITESCRIPT=${ZBX_INSTALLDIR}
+make test
+make install

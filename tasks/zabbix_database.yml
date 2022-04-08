@@ -1,0 +1,29 @@
+---
+- name: Ensure DB is ready to use Double [Zabbix 5]
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ zabbix_user }}"
+    mode: 0755
+  with_items: 
+      - { src: "zabbix_5_double.sql", dest: "/tmp/zabbix_5_double.sql" }
+  when: zabbix_db_create|bool == true and zabbix_version >= 5
+  tags:
+    - zabbix-server-db
+
+- name: Transfer DB fill script
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ zabbix_user }}"
+    mode: 0755
+  with_items: 
+      - { src: "fill_db.sh", dest: "/tmp/fill_db.sh" }
+  tags:
+    - zabbix-server-db
+
+- name: Update DB
+  shell: /tmp/fill_db.sh
+  ignore_errors: yes
+  tags:
+    - zabbix-server-db

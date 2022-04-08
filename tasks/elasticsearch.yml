@@ -1,0 +1,29 @@
+- name: Installing npm for dumping
+  package:
+    pkg: npm
+    state: latest
+    force: yes
+
+- name: Install elasticdump - an ES tool
+  npm:
+    name: elasticdump
+    state: present
+    global: yes
+
+- name: Copy aditional scripts
+  template:
+    src: "elasticsearch_history.sh.j2"
+    dest: "/tmp/elasticsearch_history.sh"
+    force: yes
+    mode: 0755
+  ignore_errors: true
+  tags:
+    - zabbix-server-elasticsearch
+    - zabbix-server-elk
+
+- name: Creating ES Indexes
+  shell: "/tmp/elasticsearch_history.sh"
+  ignore_errors: yes
+  tags:
+    - zabbix-server-elasticsearch
+    - zabbix-server-elk

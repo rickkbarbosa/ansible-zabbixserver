@@ -1,0 +1,20 @@
+---
+- name: Removing apache default file
+  file:
+    path: /etc/apache2/sites-enabled/000-default.conf
+    state: absent
+
+- name: Copy Zabbix-Apache file
+  template:
+    src: etc/apache2/sites-available/zabbix.conf.j2
+    dest: /etc/apache2/sites-available/zabbix.conf
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+
+- name: Enable zabbix as main host
+  file:
+    src: /etc/apache2/sites-available/zabbix.conf
+    dest: /etc/apache2/sites-enabled/zabbix.conf
+    state: link

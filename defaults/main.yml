@@ -1,0 +1,103 @@
+---
+#Installation version
+zabbix_version: 5.0
+zabbix_version_build: 1
+
+#Tells wich servers could establish connections with zabbix agent. By default, it will be the host itself and current zabbix backend IP
+zabbix_server_address: "127.0.0.1, define.your.ip.here"
+#This also allows zabbix server receive request from another zabbix server to gathering services information. https://www.zabbix.com/documentation/4.2/manual/appendix/items/remote_stats
+zabbix_server_statsallowedIP: "127.0.0.1"
+
+#Zabbix Logtype: Zabbix >=4 only. Choose where Zabbix will store logs
+#Options: file, syslog or console
+zabbix_logtype: "file"
+zabbix_log_dir: "/var/log/zabbix"
+
+#Shall we monitoring VMWare too?
+zabbix_vmwarecollectors: false 
+zabbix_vmwarecollectors_settings:
+  - { collectors: 10, frequency: 60, perffrequency: 60, cachesize: "512M", timeout: 30 }
+
+#Shall we monitoring Java too?
+zabbix_javacollectors: false
+zabbix_javacollectors_settings:
+  - { port: 10052, pollers: 10, gateway: [] }
+ 
+#Needs ansible create database?
+#zabbix_db_create: Set this value as "false" if Ansible can skip database creation
+zabbix_db_create: true
+#DB Info
+zabbix_db_host: "127.0.0.1"
+zabbix_db_port: 3306
+zabbix_db_name: zabbix
+zabbix_db_user: zabbix
+zabbix_db_pass: "zabbix"
+
+zabbix_api_user: "api_user"
+zabbix_api_pass: "api_pass"
+
+# Notification apps (For classic installations - 4 and less versions)
+slack_webhook_url: "https://hooks.slack.com/services/AAAAAAAAA/BBBBBBBBB/CCCCCCCCCCCCCCCCCCCCCCCC"
+telegram_api: "000000"
+opsgenie: true
+opsgenie_api: "00000000-aaaa-bbbb-1111-222222222222"
+servicenow: []
+
+#OTher ServiceNow URL's
+zabbix_servicenow_url: "https://example.service-now.com/api/now/import/u_incident_integration"
+
+grafana_install: true
+#Define grafana database as "true" if you want Grafana saves data on specific DB - mysql, for example
+grafana_database: false
+grafana_database_name: "grafana"
+
+#zabbix_web_main defines if Zabbix is the main host on apache server or will be used with a URI (eg: http://some-url.com/zabbix). Default is "subdir".
+#Replace it to "True" if you wanna Zabbix as main host
+zabbix_web_main: false
+grafana_web_main: false
+
+
+zabbix_snmp: true
+zabbix_snmp_trapdir: "/tmp/zabbix_traps.tmp"
+zabbix_snmp_trappers: 1
+
+#Zabbix4 Zone
+zabbix_elasticsearch_enabled: false
+zabbix_elasticsearch:
+  url: "http://localhost:9200"
+  storagetype: "uint,dbl,str,log,text"
+  replicas: 0
+  shards: 1 #You must at least 1
+
+zabbix_realtime_enabled: false
+zabbix_realtime:
+  dir: "/var/lib/zabbix/rtd"
+  size: "1G"
+
+#Zabbix configuration. Names is presented a seen on https://www.zabbix.com/documentation/3.2/manual/appendix/config/zabbix_server. You can handle the values here or change your defaults configuration on host_vars//group_vars in a variable suffixed with "zabbix_configuration__to_merge".
+default_zabbix_configuration__to_merge:
+  AllowRoot: 0
+  StartPollers: 10
+  StartIPMIPollers: 0
+  StartProxyPollers: 0
+  StartPreprocessors: 20
+  StartPollersUnreachable: 20
+  StartTrappers: 5
+  StartPingers: 20
+  StartDiscoverers: 5
+  StartHTTPPollers: 20
+  StartEscalators: 1
+  StartAlerters: 3
+  HousekeepingFrequency: 24
+  CacheSize: 128M
+  CacheUpdateFrequency: 60
+  StartDBSyncers: 4
+  HistoryCacheSize: 256M
+  HistoryIndexCacheSize: 4M
+  TrendCacheSize: 128M
+  ValueCacheSize: 968M
+  UnreachablePeriod: 45
+  UnavailableDelay: 60
+  UnreachableDelay: 15
+  LogSlowQueries: 10000
+  StartLLDProcessors: 3

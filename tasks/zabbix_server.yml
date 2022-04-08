@@ -1,0 +1,112 @@
+- name: Define variables
+  merge_vars:
+    suffix_to_merge: zabbix_configuration__to_merge
+    merged_var_name: zabbix_configuration
+    expected_type: 'dict'
+  tags:
+    - zabbix-server-configfile    
+- name: ensure monitoring packages are present
+  package:
+    pkg: "{{ item }}"
+    state: latest
+    force: yes
+  with_items: 
+    - "{{ monitoring_packages }}"
+  
+- name: ensure graphic packages are present
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+    force: yes
+  with_items:   
+    - "{{ monitoring_graphic_packages }} "
+
+- name: Copy aditional scripts
+  copy:
+    src: usr/lib/zabbix/externalscripts
+    dest: /usr/lib/zabbix/
+    mode: 0755
+    force: yes
+  ignore_errors: true
+  tags:
+    - zabbix-server-files
+
+- name: Ensure Zabbix directories exists
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: "zabbix"
+    group: "zabbix"
+  with_items:
+    - "{{ zabbix_log_dir }}"
+    - "{{ zabbix_realtime.dir }}"
+    - "/var/run/zabbix/"
+  tags:
+    - zabbix-server-configfile
+    - zabbix-server-files
+
+- template: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ zabbix_user }}"
+    mode: 0644
+    force: yes
+    backup: yes
+  with_items:
+    - { src: "etc/zabbix/web/zabbix.conf.j2", dest: "/etc/zabbix/web/zabbix.conf.php" }
+    - { src: "etc/zabbix/zabbix_server.j2", dest: "/etc/zabbix/zabbix_server.conf" }
+    - { src: "usr/lib/zabbix/externalscripts/proxy_queues.py.j2", dest: "/usr/lib/zabbix/externalscripts/proxy_queues.py" }
+  notify: Restart Zabbix Server
+  tags:
+    - zabbix-server-configfile
+
+- name: Optimized query file [ZBX-10229] [ZBX-12867]
+  copy: 
+    src: "usr/share/zabbix/include/classes/api"
+    dest: /usr/share/zabbix/include/classes/api/
+    mode: 0644
+  ignore_errors: true
+  tags:
+    - zabbix-server-files
+  when: zabbix_version = 3
+
+- name: Enable Float64 [Zabbix 5]
+  lineinfile:
+    dest: "/etc/zabbix/web/zabbix.conf.php"
+    insertafter: '^global \$DB;'
+    line: "$DB['DOUBLE_IEEE754'] = 'true';"
+    state: present
+    backup: yes
+  when: zabbix_version >= 5
+
+- include: zabbix_database.yml 
+  when: (zabbix_db_create|bool == true) and ( zabbix_api_user or zabbix_api_pass )
+  tags:
+    - zabbix-server-db
+
+- include: elasticsearch.yml 
+  when: (zabbix_version >=4) and (zabbix_elasticsearch.enabled|bool == true)
+  tags:
+    - zabbix-server-elasticsearch
+    - zabbix-server-elk  
+
+- name: Preparing message senders [Previous Zabbix Versions]
+  include: zabbix_alert_senders.yml
+  tags:
+    - zabbix-notify
+
+- name: Restart monitoring services
+  service: 
+    name: "{{ item }}"
+    state: restarted
+    enabled: yes
+  with_items: 
+    - "{{ monitoring_services }}"
+  tags:
+    - zabbix-server-configfile
+
+- include: grafana.yml
+  when: grafana_install|bool == True
+  tags:
+    - zabbix-grafana

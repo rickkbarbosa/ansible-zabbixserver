@@ -1,0 +1,87 @@
+---
+#OpsGenie Integration
+#As seen on https://www.opsgenie.com/docs/integrations/zabbix/rich-integrationa
+- name: Install a OpsGenie Integration (Debian)
+  apt:
+    deb: "{{ opsgenie_deb_url }}"
+  when: opsgenie|bool == true
+  tags:
+    - zabbix-notify-opsgenie
+
+- name: Copy opsgenie integration conf file
+  template:
+    src: "etc/opsgenie/conf/config.j2"
+    dest: "/home/opsgenie/oec/conf/config.json"
+    group: "opsgenie"
+    mode: 0644
+  when: opsgenie|bool == true
+  tags:
+    - zabbix-notify-opsgenie  
+
+- name: Installing required python libs for ServiceNow and others
+  pip:
+   name: "{{ item }}"
+  with_items:
+    - requests
+    - logging
+    - uuid
+    - pybase64
+    - regex
+    - zabbix-api
+    - py-zabbix
+    - pyzabbix
+    - zabbixapi
+  when: servicenow
+  tags:
+    - zabbix-notify-servicenow
+
+#Slack and Pagerduty Integration
+#As seen on https://github.com/v-zhuravlev/zabbix-notify
+- name: Preparing Slack and Pagerduty notifier
+  get_url:
+    url: "{{ zabbix_extra_server_files_url }}/{{ item }}"
+    dest: /opt/{{ item }}
+    mode: 0755
+    force: yes
+  with_items: 
+    - zabbix-notify.tar.gz
+  when: zabbix_version|int < 5
+  tags:
+    - zabbix-notify-pagerduty
+    - zabbix-notify-slack
+
+- name: Preparing Slack and Pagerduty notifier
+  shell: "/opt/zbx-notify_compiler.sh"
+  when: slack_webhook_url
+  ignore_errors: true
+  when: zabbix_version|int < 5
+  tags:
+    - zabbix-notify-pagerduty
+    - zabbix-notify-slack  
+
+#Telegram and MSTeams Integration
+#Telegrams must a Telegram BOT and API - Follow @botfather
+- name: Preparing MSTeams, Telegram and ServiceNow notifiers
+  copy:
+    src: usr/lib/zabbix/alertscripts
+    dest: /usr/lib/zabbix/
+    mode: 0755
+  when: zabbix_version|int < 5
+  tags:
+    - zabbix-notify-msteams
+    - zabbix-notify-servicenow
+    - zabbix-notify-telegram  
+
+- name: Preparing Slack, Pagerduty and Telegram notifiers
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  with_items:
+    - { src: "zbx-notify_compiler.j2", dest: "/opt/zbx-notify_compiler.sh", mode: "0777" }
+    - { src: "usr/lib/zabbix/alertscripts/slack.j2", dest: "/usr/lib/zabbix/alertscripts/slack.sh", mode: "0755" }
+    - { src: "usr/lib/zabbix/alertscripts/telegram/zbxtg_settings.j2", dest: "/usr/lib/zabbix/alertscripts/telegram/zbxtg_settings.py", mode: "0755" }
+  when: zabbix_version|int < 5
+  tags:
+    - zabbix-notify-pagerduty
+    - zabbix-notify-slack  

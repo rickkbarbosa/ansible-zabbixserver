@@ -1,0 +1,12 @@
+- name: Refresh OS Informations
+  setup:
+
+- include: apt_keys.yml
+  when: ansible_os_family == 'Debian'
+  
+- include: zabbix_server.yml
+
+- include: apache.yml
+  tags:
+    - zabbix-apache
+    - grafana-apache
