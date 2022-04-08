@@ -3,7 +3,13 @@ ZABBIX-SERVER
 
 DESCRIPTION
 ----
-Installs all Zabbix server and Grafana with plugins
+Installs all Zabbix server and Grafana with plugins using [Ansible](https://www.ansible.com/community) role.
+
+This role can install Zabbix Server (v4 and above), added with the following features:
+
+- Optimized calls for `services.inc.php`, `srv_status.php` and _Latest data presentations_ (for v4);
+- Configuration file flexible for use ElasticSearch and specific resources (v5);
+- Added scripted-media types for Telegram, MSTeams, Slack, Service Now and Pagerduty;
 
 
 VARIABLES
