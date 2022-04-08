@@ -1,0 +1,10 @@
+#Ansible Needed
+ansible==2.8.2
+ansible_merge_vars
+pywinrm
+#Zabbix-Monitoring
+redis
+passlib
+pyinstaller
+boto3
+parsimonious
