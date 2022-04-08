@@ -9,12 +9,22 @@ This role can install Zabbix Server (v4 and above), added with the following fea
 
 - Optimized calls for `services.inc.php`, `srv_status.php` and _Latest data presentations_ (for v4);
 - Configuration file flexible for use ElasticSearch and specific resources (v5);
-- Added scripted-media types for Telegram, MSTeams, Slack, Service Now and Pagerduty;
+- Added scripted-media types for Telegram, MSTeams, Slack, ~Service Now~ (supressed) and Pagerduty;
+
+
+REPO USAGE
+---
+```
+git clone https://github.com/rickkbarbosa/ansible-zabbixserver.git
+cd ansible-zabbixserver
+pip install -r requirements.txt
+```
 
 
 VARIABLES
 ----
 
+The _defaults/main.yml_ variables could be changed using Ansible "environments" format for each Zabbix Installation a manager could have. Just keep the structure for the definitions and enjoy.
 The _vars/main.yml_ variables is child-linked with the main roles and their replacing are not encouraged.
 
 AVAILABLE TAGS
