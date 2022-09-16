@@ -1,5 +1,4 @@
 galaxy_info:
-  role_name: zabix-server
   author: Rickk Barbosa (rickkbarbosa@live.com)
   description: Installs all Zabbix server and Grafana with plugins using Ansible role.
   license: GPLv2
